@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 *.db
 google_service/service_account.json
+service_account.json
