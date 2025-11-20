@@ -124,11 +124,11 @@
 
                 <div class="integer_sub_box">
                     <label class="input_label" for="goal">Goal:</label>
-                    <input class="integer_input" type="number" id="goal" name="goal" required><br><br>
+                    <input class="integer_input" type="number" id="goal" value="20" name="goal" required><br><br>
                 </div>
                 <div class="integer_sub_box">
                     <label class="input_label" for="lpc">LPC:</label>
-                    <input class="integer_input" type="number" id="lpc" name="lpc" required><br><br>
+                    <input class="integer_input" type="number" id="lpc" name="lpc" value="2" required><br><br>
                 </div>
 
               </div>
@@ -145,7 +145,7 @@
                         </span>
                     </span>
                     </div>
-                    <input class="integer_input" type="text" id="size" name="size" required><br><br>
+                    <input class="integer_input" type="text" id="size" value="any" name="size" required><br><br>
                 </div>
                 <div class="integer_sub_box">
                     <div class="label_and_info_box">
@@ -156,7 +156,7 @@
                         </span>
                     </span>
                     </div>
-                    <input class="integer_input" type="text" id="revenue" name="revenue" required><br><br>
+                    <input class="integer_input" type="text" id="revenue" value="any" name="revenue" required><br><br>
                 </div>
 
                 <div class="integer_sub_box">
@@ -269,8 +269,7 @@
                           <label class="input_label_with_info" for="levels">Level range/+:</label>
                           <span class="info_icon" tabindex="0" aria-describedby="levels_info2" role="tooltip">ℹ️
                             <span class="tooltip" id="levels_info2" role="tooltip">
-                              1. Select job level from - to for define range<br>
-                              2. Select first job level and leave empty second one for take higher levels
+                              Select job level to start from. All higher levels will be included.
                             </span>
                         </span>
                         </div>
@@ -283,15 +282,6 @@
                       
                         <br><br>
                       </div>
-  
-                      <span>to</span>
-                      
-                      <!-- 2 -->
-                      <select class="first_level_select" id="level3" name="level3[]">
-                        {% for level in levels %}
-                          <option value="{{ level }}">{{ level }}</option>
-                        {% endfor %}
-                      </select>
   
                     </div>
   
@@ -307,7 +297,7 @@
                         </span>
                     </span>
                     </div>
-                    <textarea class="keywords_text_area" id="keywords" name="keywords"></textarea><br><br> 
+                    <textarea class="keywords_text_area" id="keywords" name="keywords">IT information</textarea><br><br> 
                   </div>
   
                 </div>

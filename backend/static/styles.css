@@ -533,9 +533,6 @@ input:checked + .slider:before {
 #level2 + .select2-container .select2-selection--multiple {
   width: 120px;
 }
-#level3 + .select2-container .select2-selection--multiple {
-  width: 120px;
-}
 
 .label_and_info_box_level {
   display: flex;
@@ -546,10 +543,6 @@ input:checked + .slider:before {
 
 /* For single select (dropdown style) */
 #level2 + .select2-container .select2-selection--single {
-  width: 120px;
-  height: 32px;
-}
-#level3 + .select2-container .select2-selection--single {
   width: 120px;
   height: 32px;
 }
@@ -661,10 +654,6 @@ input:checked + .slider:before {
   border: 2px solid #28a745; 
 } */
 
-/* style 'to' selects (level3) */
-/* .level-to-container .select2-selection { 
-  border: 2px dashed #17a2b8; 
-} */
 
 /* fallback for plain selects (when Select2 is not present) */
 .req-box-select { 

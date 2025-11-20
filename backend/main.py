@@ -250,7 +250,6 @@ def api_entries(request: Request, access_token: str = Cookie(None), db: Session 
         return JSONResponse(status_code=401, content={"error": "Unauthorized"})
 
     entries = db.query(ProcessEntry).order_by(ProcessEntry.id).all()
-    print(f"Entries: {entries}")
     return JSONResponse(content=jsonable_encoder([{
         "id": entry.id,
         "name": entry.name,

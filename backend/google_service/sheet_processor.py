@@ -206,24 +206,47 @@ def flush_buffer(sheet: gspread.Spreadsheet, tab_name: str):
             buffer = []
             batch_buffers[key] = []
 
-        if not buffer:
-            return  # nothing to flush
-
-        # Get or create the worksheet
+        # Get or create the worksheet (even if buffer is empty, ensure it exists if header exists)
         try:
             worksheet = sheet.worksheet(tab_name)
         except gspread.exceptions.WorksheetNotFound:
-            worksheet = sheet.add_worksheet(
-                title=tab_name,
-                rows=str(len(buffer) + 1),
-                cols=str(len(buffer[0])),
-            )
-            # Write header row if we have one
-            if key in batch_headers:
-                worksheet.append_row(batch_headers[key])
+            # If we have a header but no buffer, still create the worksheet with header
+            if key in batch_headers and batch_headers[key]:
+                header = batch_headers[key]
+                cols = max(len(header), 5)
+                worksheet = sheet.add_worksheet(
+                    title=tab_name,
+                    rows="1000",
+                    cols=str(cols),
+                )
+                # Write header row
+                worksheet.update("A1", [header])
+            elif buffer:
+                # Create worksheet with buffer data
+                worksheet = sheet.add_worksheet(
+                    title=tab_name,
+                    rows=str(len(buffer) + 1),
+                    cols=str(len(buffer[0]) if buffer else 5),
+                )
+                # Write header row if we have one
+                if key in batch_headers and batch_headers[key]:
+                    worksheet.update("A1", [batch_headers[key]])
+            else:
+                # No buffer and no header - nothing to do
+                return
 
-        # Write buffered rows
-        worksheet.append_rows(buffer)
+        # Write buffered rows if any
+        if buffer:
+            # Ensure header is written if it exists
+            if key in batch_headers and batch_headers[key]:
+                try:
+                    current_header = worksheet.row_values(1)
+                    if not current_header or len(current_header) < len(batch_headers[key]):
+                        worksheet.update("A1", [batch_headers[key]])
+                except Exception:
+                    worksheet.update("A1", [batch_headers[key]])
+            
+            worksheet.append_rows(buffer)
 
         # Clear buffer
         batch_buffers[key] = []
@@ -235,11 +258,33 @@ def flush_buffer(sheet: gspread.Spreadsheet, tab_name: str):
 def flush_all_buffers(sheet: gspread.Spreadsheet):
     """
     Flushes all tab buffers belonging to this sheet only.
+    Also ensures worksheets exist for any tabs that have headers, even if buffers are empty.
     """
+    # First, flush all buffers
     for key in list(batch_buffers.keys()):
         if key.startswith(sheet.url + "::"):
             _, tab_name = key.split("::", 1)
             flush_buffer(sheet, tab_name)
+    
+    # Then, ensure worksheets exist for any tabs that have headers (even if buffers are empty)
+    # This ensures the "result" sheet exists even if all suitable results were already flushed
+    for key in list(batch_headers.keys()):
+        if key.startswith(sheet.url + "::"):
+            _, tab_name = key.split("::", 1)
+            try:
+                # Try to get the worksheet - if it doesn't exist, create it
+                sheet.worksheet(tab_name)
+            except gspread.exceptions.WorksheetNotFound:
+                # Create worksheet with header
+                header = batch_headers[key]
+                if header:
+                    cols = max(len(header), 5)
+                    worksheet = sheet.add_worksheet(
+                        title=tab_name,
+                        rows="1000",
+                        cols=str(cols),
+                    )
+                    worksheet.update("A1", [header])
 
 
 def register_flush_on_exit(sheet):

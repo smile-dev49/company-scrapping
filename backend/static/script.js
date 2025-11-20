@@ -61,11 +61,10 @@
           // 1) Add a class to the original <select> so you can always target it
           $el.addClass('req-box-select');
       
-          // 2) Add semantic classes depending on id/name (level2 = "from", level3 = "to")
+          // 2) Add semantic classes depending on id/name (level2 = "from")
           const id = $el.attr('id') || '';
           const name = $el.attr('name') || '';
           if (/^level2(?:_|$)/.test(id) || name === 'level2[]') $el.addClass('level-from');
-          if (/^level3(?:_|$)/.test(id) || name === 'level3[]') $el.addClass('level-to');
       
           // Destroy any existing select2 instance (safe re-init)
           if ($el.hasClass('select2-hidden-accessible')) {
@@ -467,14 +466,13 @@
             const job_function_select = box.querySelector('select[name="function[]"]') || box.querySelector('select[id^="function"]');
             const level1_select = box.querySelector('select[name="level[]"]') || box.querySelector('select[id^="level_"]');
             const level2_select = box.querySelector('select[name="level2[]"]') || box.querySelector('select[id^="level2_"]');
-            const level3_select = box.querySelector('select[name="level3[]"]') || box.querySelector('select[id^="level3_"]');
             const keywords_el = box.querySelector('textarea[name="keywords"]') || box.querySelector('.keywords_text_area');
   
             return {
               job_function: job_function_select ? getSelectValues(job_function_select) : [],
               level1: level1_select ? getSelectValues(level1_select) : [],
               level2: level2_select ? getSelectValues(level2_select) : [],
-              level3: level3_select ? getSelectValues(level3_select) : [],
+              level3: [], // level3 removed - always empty
               keywords: keywords_el ? (keywords_el.value || '').trim() : '',
             };
           });
