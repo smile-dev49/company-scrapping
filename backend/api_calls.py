@@ -5,11 +5,7 @@ from dotenv import load_dotenv
 import os
 import json
 
-
-# Load .env variables
 load_dotenv()
-
-# 🔐 ENV VARS
 NINJA_API_KEY = os.getenv("EMAIL_VERIFY_NINJA_KEY")
 EMAIL_FINDER_KEY = os.getenv("EMAIL_FINDER_KEY")
 FIND_AND_VALIDATE_EMAIL_KEY = os.getenv("EMAIL_FINDER_AND_VALIDATE_KEY")
@@ -19,7 +15,6 @@ DETECT_ACTIVITY_API_KEY = os.getenv("DETECT_ACTIVITY_API_KEY")
 
 class ApiError(Exception):
     pass
-
 
 def get_company_by_domain(rapidapi_key, domain):
     """
@@ -153,370 +148,6 @@ def get_search_results(rapidapi_key, request_id):
     except Exception as e:
         print(f"Error fetching request id: {e}", flush=True)
         return {}
-    
-
-# def find_email(person_data):
-#     """
-#     Find email for lead.
-#     """
-#     url = "https://email-finder7.p.rapidapi.com/email-address/find-one/"
-
-#     first_name = person_data["first_name"].strip()
-#     last_name = person_data["last_name"].strip()
-#     domain = person_data["domain"].strip()
-
-#     suffixes = [
-#         "CPA", "MD", "PhD", "JD", "RN", "CEO", "CFO", "COO", "CTO", "PMP",
-#         "CFA", "CFE", "CFI", "CISA", "CMA", "CSM", "Esq.", "DDS", "DO", "DVM",
-#         "MBA", "BSc", "MSc", "Eng.", "LLM", "ACCA", "CA", "NP", "PA", "RPh",
-#         "CRC", "CHRP", "MCSE", "AWS", "GCP", "CISSP"
-#     ]
-
-#     suffix_pattern = r'(\s*,\s*|\s+)?(' + '|'.join(r'\b' + re.escape(s) + r'\b' for s in suffixes) + r')(\s*,\s*|\s+)?'
-#     domain = re.sub(r'^(https?://)?(www\.)?', '', domain).rstrip('/')
-
-#     if first_name and not re.fullmatch(r'\b(' + '|'.join(re.escape(s) for s in suffixes) + r')\b', first_name, flags=re.IGNORECASE):
-#         first_name = re.sub(suffix_pattern, '', first_name, flags=re.IGNORECASE).strip()
-#     if last_name and not re.fullmatch(r'\b(' + '|'.join(re.escape(s) for s in suffixes) + r')\b', last_name, flags=re.IGNORECASE):
-#         last_name = re.sub(suffix_pattern, '', last_name, flags=re.IGNORECASE).strip()
-
-#     payload = {
-#         "personFirstName": first_name,
-#         "personLastName": last_name,
-#         "domain": domain
-#     }
-
-#     headers = {
-#         "x-rapidapi-key": EMAIL_FINDER_KEY,
-#         "x-rapidapi-host": "email-finder7.p.rapidapi.com"
-#     }
-
-#     try:
-#         response = requests.get(url, headers=headers, params=payload, timeout=5)
-
-#         print(f"&&&&&&& {response}")
-
-#         if response.status_code == 429:
-#             print("❌ 429 Too Many Requests")
-#             return 429
-        
-#         if response.status_code == 522:
-#             print("❌ 522 Server error find email")
-#             return 522
-        
-#         if response.status_code == 200:
-#             json_response = response.json()
-#             print(f"5555555555555555555555555555 {json_response}")
-#             return json_response.get("payload", None).get("data", None)
-
-#         # Safe to raise other HTTP errors
-#         # response.raise_for_status()
-
-#         # if not response.text:
-#         #     print(f"API Error: Empty response. Status: {response.status_code}, Payload: {payload}")
-#         #     return {}
-
-#         # try:
-#         #     json_response = response.json()
-#         #     if not isinstance(json_response, dict):
-#         #         print(f"⚠️ Unexpected JSON format: {type(json_response)}: {response.text}")
-#         #         return {}
-#         #     return json_response.get("payload", {}).get("data", {})
-#         # except ValueError:
-#         #     print(f"❌ Invalid JSON")
-#         #     return None
-
-#     except requests.RequestException as e:
-#         print(f"🌐 Request failed: {e}")
-#         return None
-
-
-def find_email(person_data):
-    """
-    Safely find email for a lead using the RapidAPI Email Finder service.
-    Handles invalid responses, timeouts, and inconsistent API structures.
-    """
-
-    url = "https://email-finder7.p.rapidapi.com/email-address/find-one/"
-
-    first_name = person_data.get("first_name", "").strip()
-    last_name = person_data.get("last_name", "").strip()
-    domain = person_data.get("domain", "").strip()
-
-    # --- Clean name and domain ---
-    suffixes = [
-        "CPA", "MD", "PhD", "JD", "RN", "CEO", "CFO", "COO", "CTO", "PMP",
-        "CFA", "CFE", "CFI", "CISA", "CMA", "CSM", "Esq.", "DDS", "DO", "DVM",
-        "MBA", "BSc", "MSc", "Eng.", "LLM", "ACCA", "CA", "NP", "PA", "RPh",
-        "CRC", "CHRP", "MCSE", "AWS", "GCP", "CISSP"
-    ]
-    suffix_pattern = r'(\s*,\s*|\s+)?(' + '|'.join(r'\b' + re.escape(s) + r'\b' for s in suffixes) + r')(\s*,\s*|\s+)?'
-
-    domain = re.sub(r'^(https?://)?(www\.)?', '', domain).rstrip('/')
-
-    if first_name and not re.fullmatch(r'\b(' + '|'.join(re.escape(s) for s in suffixes) + r')\b', first_name, flags=re.IGNORECASE):
-        first_name = re.sub(suffix_pattern, '', first_name, flags=re.IGNORECASE).strip()
-    if last_name and not re.fullmatch(r'\b(' + '|'.join(re.escape(s) for s in suffixes) + r')\b', last_name, flags=re.IGNORECASE):
-        last_name = re.sub(suffix_pattern, '', last_name, flags=re.IGNORECASE).strip()
-
-    payload = {
-        "personFirstName": first_name,
-        "personLastName": last_name,
-        "domain": domain
-    }
-
-    headers = {
-        "x-rapidapi-key": EMAIL_FINDER_KEY,
-        "x-rapidapi-host": "email-finder7.p.rapidapi.com"
-    }
-
-    try:
-        response = requests.get(url, headers=headers, params=payload, timeout=10)
-        # print(f"🌐 Response status: {response.status_code}")
-
-        # --- Handle known HTTP errors ---
-        if response.status_code == 429:
-            print("❌ Too Many Requests (429)")
-            return 429
-
-        if response.status_code == 522:
-            print("❌ Server error (522)")
-            return 522
-
-        # --- Only parse JSON if 200 ---
-        if response.status_code == 200:
-            try:
-                json_response = response.json()
-            except ValueError:
-                print("❌ Invalid JSON in response")
-                return None
-
-            # print(f"📩 JSON response: {json_response}")
-
-            # Handle all safe cases
-            if not isinstance(json_response, dict):
-                # print("⚠️ Unexpected JSON format")
-                return None
-
-            payload = json_response.get("payload", {})
-            if not isinstance(payload, dict):
-                # print("⚠️ Invalid 'payload' structure")
-                return None
-
-            data = payload.get("data")
-            if not data:
-                # print("⚠️ Empty or missing data in response")
-                return None
-
-            return data  
-
-        # print(f"⚠️ Unexpected status code: {response.status_code}")
-        return None
-
-    except requests.Timeout:
-        print("⏰ Request timed out")
-        return None
-
-    except requests.RequestException as e:
-        print(f"🌐 Request failed: {e}")
-        return None
-
-
-def verify_email(rapidapi_key, email):
-    
-    url = "https://validect-email-verification-v1.p.rapidapi.com/v1/verify"
-
-    querystring = {"email": email}
-    headers = { 
-        "x-rapidapi-key": rapidapi_key,
-        "x-rapidapi-host": "validect-email-verification-v1.p.rapidapi.com"
-    }
-
-    try:
-        response = requests.get(url, headers=headers, params=querystring)
-        if response.status_code == 429:
-            print(response.status_code, response.text, flush=True)
-            raise ApiError("No results for API")
-        if response.status_code == 200:
-            return response.json()
-            # return response.json().get('request_id', {})
-        else:
-            print(f"Get request id API request failed: {response.status_code} {response.text}", flush=True)
-            return {}
-    except Exception as e:
-        print(f"Error fetching request id: {e}", flush=True)
-        return {}
-    
-
-def find_and_validate_email(person_data):
-    """
-    Find and validate email for lead.
-    """
-    url = "https://email-finder11.p.rapidapi.com/v2/email/finder"
-    api_key = FIND_AND_VALIDATE_EMAIL_KEY
-
-    person_name = person_data["query"].strip()
-    company_name = person_data["company_name"].strip()
-    company_domain = person_data["company_domain"].strip()
-
-    payload = {
-        "query": person_name,
-        "company_name": company_name,
-        "company_domain": company_domain
-    }
-
-    headers = {
-        "x-rapidapi-key": api_key,
-        "x-rapidapi-host": "email-finder11.p.rapidapi.com"
-    }
-
-    try:
-        response = requests.get(url, headers=headers, params=payload)
-
-        # 👉 Check for 429 BEFORE raise_for_status
-        if response.status_code == 429:
-            print("❌ 429 Too Many Requests")
-            return 429
-        if response.status_code == 403:
-            print("❌ 403 Too Many Requests")
-            return 403
-
-        # Safe to raise other HTTP errors
-        # response.raise_for_status()
-
-        if not response.text:
-            print(f"API Error: Empty response. Status: {response.status_code}, Payload: {payload}")
-            return {}
-
-        # try:
-        #     json_response = response.json()
-        #     if not isinstance(json_response, dict):
-        #         print(f"⚠️ Unexpected JSON format: {type(json_response)}: {response.text}")
-        #         return {}
-        #     return json_response
-        # except ValueError:
-        #     print(f"❌ Invalid JSON")
-        #     return None
-
-    except requests.RequestException as e:
-        print(f"🌐 Request failed: {e}")
-        return None
-    
-
-# Email generator alternative method
-# def get_token_for_ninja(api_key: str) -> str:
-#     """Fetch a 24-hour token from MailTester.Ninja"""
-#     url = f"https://token.mailtester.ninja/token?key={api_key}"
-#     response = requests.get(url)
-#     response.raise_for_status()
-#     data = response.json()
-
-#     if "token" not in data:
-#         raise Exception(f"Failed to get token: {data}")
-#     return data["token"]
-
-
-# def verify_email_after_manual(email: str, token: str) -> dict:
-#     """Verify a single email address"""
-#     url = f"https://happy.mailtester.ninja/ninja?email={email}&token={token}"
-#     response = requests.get(url)
-#     response.raise_for_status()
-#     return response.json()
-
-
-# def generate_emails_alternative(first_name: str, last_name: str, domain: str):
-#     """Generate possible email patterns"""
-#     first = first_name.lower()
-#     last = last_name.lower()
-#     initials = first[0]
-
-#     patterns = [
-#         f"{first}@{domain}",
-#         f"{last}@{domain}",
-#         f"{first}{last}@{domain}",
-#         f"{first}.{last}@{domain}",
-#         f"{initials}{last}@{domain}",
-#         f"{first}{initials}@{domain}",
-#     ]
-
-#     return list(set(patterns))  # ensure unique
-
-
-# def generate_emails_alternative(first_name: str, last_name: str, domain: str):
-#     """Generate possible email patterns (advanced version)"""
-#     fn = first_name.lower()
-#     ln = last_name.lower()
-#     fi = fn[0]
-#     li = ln[0]
-
-#     patterns = [
-#         f"{fn}@{domain}",
-#         f"{ln}@{domain}",
-#         f"{fn}{ln}@{domain}",
-#         f"{fn}.{ln}@{domain}",
-#         f"{fi}{ln}@{domain}",
-#         f"{fi}.{ln}@{domain}",
-#         f"{fn}{li}@{domain}",
-#         f"{fn}.{li}@{domain}",
-#         f"{fi}{li}@{domain}",
-#         f"{fi}.{li}@{domain}",
-#         f"{ln}{fn}@{domain}",
-#         f"{ln}.{fn}@{domain}",
-#         f"{ln}{fi}@{domain}",
-#         f"{ln}.{fi}@{domain}",
-#         f"{li}{fn}@{domain}",
-#         f"{li}.{fn}@{domain}",
-#         f"{li}{fi}@{domain}",
-#         f"{li}.{fi}@{domain}",
-#         f"{fn}-{ln}@{domain}",
-#         f"{fi}-{ln}@{domain}",
-#         f"{fn}-{li}@{domain}",
-#         f"{fi}-{li}@{domain}",
-#         f"{ln}-{fn}@{domain}",
-#         f"{ln}-{fi}@{domain}",
-#         f"{li}-{fn}@{domain}",
-#         f"{li}-{fi}@{domain}",
-#         f"{fn}_{ln}@{domain}",
-#         f"{fi}_{ln}@{domain}",
-#         f"{fn}_{li}@{domain}",
-#         f"{fi}_{li}@{domain}",
-#         f"{ln}_{fn}@{domain}",
-#         f"{ln}_{fi}@{domain}",
-#         f"{li}_{fn}@{domain}",
-#         f"{li}_{fi}@{domain}",
-#     ]
-
-#     return list(set(patterns))  # ensure unique
-
-
-# def find_email_manual(person_data: dict):
-#     """
-#     Find a valid email for a given person using MailTester API.
-
-#     person_data must contain:
-#       - first_name
-#       - last_name
-#       - domain
-#     """
-#     api_key = NINJA_API_KEY
-#     token = get_token_for_ninja(api_key)
-
-#     candidates = generate_emails_alternative(
-#         person_data["first_name"], person_data["last_name"], person_data["domain"]
-#     )
-
-#     for email in candidates:
-#         result = verify_email_after_manual(email, token)
-#         if result.get("code") == "ok":
-#             return {
-#                 "found_email": email,
-#                 "details": result
-#             }
-
-#     return {
-#         "found_email": "email not found",
-#         "details": None
-#     }
 
 
 def get_revenue(company):
@@ -643,3 +274,367 @@ def get_company_domain(api_key, linkedin_url):
     except Exception as e:
         print(f"Error fetching company data by domain: {e}", flush=True)
         return {}
+
+
+
+def find_email(person_data):
+    """
+    Safely find email for a lead using the RapidAPI Email Finder service.
+    Handles invalid responses, timeouts, and inconsistent API structures.
+    """
+
+    url = "https://email-finder7.p.rapidapi.com/email-address/find-one/"
+
+    first_name = person_data.get("first_name", "").strip()
+    last_name = person_data.get("last_name", "").strip()
+    domain = person_data.get("domain", "").strip()
+
+    # --- Clean name and domain ---
+    suffixes = [
+        "CPA", "MD", "PhD", "JD", "RN", "CEO", "CFO", "COO", "CTO", "PMP",
+        "CFA", "CFE", "CFI", "CISA", "CMA", "CSM", "Esq.", "DDS", "DO", "DVM",
+        "MBA", "BSc", "MSc", "Eng.", "LLM", "ACCA", "CA", "NP", "PA", "RPh",
+        "CRC", "CHRP", "MCSE", "AWS", "GCP", "CISSP"
+    ]
+    suffix_pattern = r'(\s*,\s*|\s+)?(' + '|'.join(r'\b' + re.escape(s) + r'\b' for s in suffixes) + r')(\s*,\s*|\s+)?'
+
+    domain = re.sub(r'^(https?://)?(www\.)?', '', domain).rstrip('/')
+
+    if first_name and not re.fullmatch(r'\b(' + '|'.join(re.escape(s) for s in suffixes) + r')\b', first_name, flags=re.IGNORECASE):
+        first_name = re.sub(suffix_pattern, '', first_name, flags=re.IGNORECASE).strip()
+    if last_name and not re.fullmatch(r'\b(' + '|'.join(re.escape(s) for s in suffixes) + r')\b', last_name, flags=re.IGNORECASE):
+        last_name = re.sub(suffix_pattern, '', last_name, flags=re.IGNORECASE).strip()
+
+    payload = {
+        "personFirstName": first_name,
+        "personLastName": last_name,
+        "domain": domain
+    }
+
+    headers = {
+        "x-rapidapi-key":EMAIL_FINDER_KEY,
+        "x-rapidapi-host": "email-finder7.p.rapidapi.com"
+    }
+
+    try:
+        response = requests.get(url, headers=headers, params=payload, timeout=10)
+        # print(f"🌐 Response status: {response.status_code}")
+
+        # --- Handle known HTTP errors ---
+        if response.status_code == 429:
+            print("❌ Too Many Requests (429)")
+            return 429
+
+        if response.status_code == 522:
+            print("❌ Server error (522)")
+            return 522
+
+        # --- Only parse JSON if 200 ---
+        if response.status_code == 200:
+            try:
+                json_response = response.json()
+            except ValueError:
+                print("❌ Invalid JSON in response")
+                return None
+
+            # print(f"📩 JSON response: {json_response}")
+
+            # Handle all safe cases
+            if not isinstance(json_response, dict):
+                # print("⚠️ Unexpected JSON format")
+                return None
+
+            payload = json_response.get("payload", {})
+            if not isinstance(payload, dict):
+                # print("⚠️ Invalid 'payload' structure")
+                return None
+
+            data = payload.get("data")
+            if not data:
+                # print("⚠️ Empty or missing data in response")
+                return None
+
+            return data  
+
+        # print(f"⚠️ Unexpected status code: {response.status_code}")
+        return None
+
+    except requests.Timeout:
+        print("⏰ Request timed out")
+        return None
+
+    except requests.RequestException as e:
+        print(f"🌐 Request failed: {e}")
+        return None
+
+
+def verify_email(rapidapi_key, email):
+    
+    url = "https://validect-email-verification-v1.p.rapidapi.com/v1/verify"
+
+    querystring = {"email": email}
+    headers = { 
+        "x-rapidapi-key": '6158d72143msh45c25e07c9bcb8bp1b4178jsned84e61423ce',
+        "x-rapidapi-host": "validect-email-verification-v1.p.rapidapi.com"
+    }
+
+    try:
+        response = requests.get(url, headers=headers, params=querystring)
+        if response.status_code == 429:
+            print(response.status_code, response.text, flush=True)
+            raise ApiError("No results for API")
+        if response.status_code == 200:
+            return response.json()
+            # return response.json().get('request_id', {})
+        else:
+            print(f"Get request id API request failed: {response.status_code} {response.text}", flush=True)
+            return {}
+    except Exception as e:
+        print(f"Error fetching request id: {e}", flush=True)
+        return {}
+    
+
+def find_and_validate_email(person_data):
+    """
+    Find and validate email for lead.
+    """
+    url = "https://email-finder11.p.rapidapi.com/v2/email/finder"
+    api_key = FIND_AND_VALIDATE_EMAIL_KEY
+
+    person_name = person_data["query"].strip()
+    company_name = person_data["company_name"].strip()
+    company_domain = person_data["company_domain"].strip()
+
+    payload = {
+        "query": person_name,
+        "company_name": company_name,
+        "company_domain": company_domain
+    }
+
+    headers = {
+        "x-rapidapi-key": api_key,
+        "x-rapidapi-host": "email-finder11.p.rapidapi.com"
+    }
+
+    try:
+        response = requests.get(url, headers=headers, params=payload)
+
+        # 👉 Check for 429 BEFORE raise_for_status
+        if response.status_code == 429:
+            print("❌ 429 Too Many Requests")
+            return 429
+        if response.status_code == 403:
+            print("❌ 403 Too Many Requests")
+            return 403
+
+        # Safe to raise other HTTP errors
+        # response.raise_for_status()
+
+        if not response.text:
+            print(f"API Error: Empty response. Status: {response.status_code}, Payload: {payload}")
+            return {}
+
+        # try:
+        #     json_response = response.json()
+        #     if not isinstance(json_response, dict):
+        #         print(f"⚠️ Unexpected JSON format: {type(json_response)}: {response.text}")
+        #         return {}
+        #     return json_response
+        # except ValueError:
+        #     print(f"❌ Invalid JSON")
+        #     return None
+
+    except requests.RequestException as e:
+        print(f"🌐 Request failed: {e}")
+        return None
+    
+
+# def find_email(person_data):
+#     """
+#     Find email for lead.
+#     """
+#     url = "https://email-finder7.p.rapidapi.com/email-address/find-one/"
+
+#     first_name = person_data["first_name"].strip()
+#     last_name = person_data["last_name"].strip()
+#     domain = person_data["domain"].strip()
+
+#     suffixes = [
+#         "CPA", "MD", "PhD", "JD", "RN", "CEO", "CFO", "COO", "CTO", "PMP",
+#         "CFA", "CFE", "CFI", "CISA", "CMA", "CSM", "Esq.", "DDS", "DO", "DVM",
+#         "MBA", "BSc", "MSc", "Eng.", "LLM", "ACCA", "CA", "NP", "PA", "RPh",
+#         "CRC", "CHRP", "MCSE", "AWS", "GCP", "CISSP"
+#     ]
+
+#     suffix_pattern = r'(\s*,\s*|\s+)?(' + '|'.join(r'\b' + re.escape(s) + r'\b' for s in suffixes) + r')(\s*,\s*|\s+)?'
+#     domain = re.sub(r'^(https?://)?(www\.)?', '', domain).rstrip('/')
+
+#     if first_name and not re.fullmatch(r'\b(' + '|'.join(re.escape(s) for s in suffixes) + r')\b', first_name, flags=re.IGNORECASE):
+#         first_name = re.sub(suffix_pattern, '', first_name, flags=re.IGNORECASE).strip()
+#     if last_name and not re.fullmatch(r'\b(' + '|'.join(re.escape(s) for s in suffixes) + r')\b', last_name, flags=re.IGNORECASE):
+#         last_name = re.sub(suffix_pattern, '', last_name, flags=re.IGNORECASE).strip()
+
+#     payload = {
+#         "personFirstName": first_name,
+#         "personLastName": last_name,
+#         "domain": domain
+#     }
+
+#     headers = {
+#         "x-rapidapi-key": EMAIL_FINDER_KEY,
+#         "x-rapidapi-host": "email-finder7.p.rapidapi.com"
+#     }
+
+#     try:
+#         response = requests.get(url, headers=headers, params=payload, timeout=5)
+
+#         print(f"&&&&&&& {response}")
+
+#         if response.status_code == 429:
+#             print("❌ 429 Too Many Requests")
+#             return 429
+        
+#         if response.status_code == 522:
+#             print("❌ 522 Server error find email")
+#             return 522
+        
+#         if response.status_code == 200:
+#             json_response = response.json()
+#             print(f"5555555555555555555555555555 {json_response}")
+#             return json_response.get("payload", None).get("data", None)
+
+#         # Safe to raise other HTTP errors
+#         # response.raise_for_status()
+
+#         # if not response.text:
+#         #     print(f"API Error: Empty response. Status: {response.status_code}, Payload: {payload}")
+#         #     return {}
+
+#         # try:
+#         #     json_response = response.json()
+#         #     if not isinstance(json_response, dict):
+#         #         print(f"⚠️ Unexpected JSON format: {type(json_response)}: {response.text}")
+#         #         return {}
+#         #     return json_response.get("payload", {}).get("data", {})
+#         # except ValueError:
+#         #     print(f"❌ Invalid JSON")
+#         #     return None
+
+#     except requests.RequestException as e:
+#         print(f"🌐 Request failed: {e}")
+#         return None
+
+# Email generator alternative method
+# def get_token_for_ninja(api_key: str) -> str:
+#     """Fetch a 24-hour token from MailTester.Ninja"""
+#     url = f"https://token.mailtester.ninja/token?key={api_key}"
+#     response = requests.get(url)
+#     response.raise_for_status()
+#     data = response.json()
+
+#     if "token" not in data:
+#         raise Exception(f"Failed to get token: {data}")
+#     return data["token"]
+
+
+# def verify_email_after_manual(email: str, token: str) -> dict:
+#     """Verify a single email address"""
+#     url = f"https://happy.mailtester.ninja/ninja?email={email}&token={token}"
+#     response = requests.get(url)
+#     response.raise_for_status()
+#     return response.json()
+
+
+# def generate_emails_alternative(first_name: str, last_name: str, domain: str):
+#     """Generate possible email patterns"""
+#     first = first_name.lower()
+#     last = last_name.lower()
+#     initials = first[0]
+
+#     patterns = [
+#         f"{first}@{domain}",
+#         f"{last}@{domain}",
+#         f"{first}{last}@{domain}",
+#         f"{first}.{last}@{domain}",
+#         f"{initials}{last}@{domain}",
+#         f"{first}{initials}@{domain}",
+#     ]
+
+#     return list(set(patterns))  # ensure unique
+
+
+# def generate_emails_alternative(first_name: str, last_name: str, domain: str):
+#     """Generate possible email patterns (advanced version)"""
+#     fn = first_name.lower()
+#     ln = last_name.lower()
+#     fi = fn[0]
+#     li = ln[0]
+
+#     patterns = [
+#         f"{fn}@{domain}",
+#         f"{ln}@{domain}",
+#         f"{fn}{ln}@{domain}",
+#         f"{fn}.{ln}@{domain}",
+#         f"{fi}{ln}@{domain}",
+#         f"{fi}.{ln}@{domain}",
+#         f"{fn}{li}@{domain}",
+#         f"{fn}.{li}@{domain}",
+#         f"{fi}{li}@{domain}",
+#         f"{fi}.{li}@{domain}",
+#         f"{ln}{fn}@{domain}",
+#         f"{ln}.{fn}@{domain}",
+#         f"{ln}{fi}@{domain}",
+#         f"{ln}.{fi}@{domain}",
+#         f"{li}{fn}@{domain}",
+#         f"{li}.{fn}@{domain}",
+#         f"{li}{fi}@{domain}",
+#         f"{li}.{fi}@{domain}",
+#         f"{fn}-{ln}@{domain}",
+#         f"{fi}-{ln}@{domain}",
+#         f"{fn}-{li}@{domain}",
+#         f"{fi}-{li}@{domain}",
+#         f"{ln}-{fn}@{domain}",
+#         f"{ln}-{fi}@{domain}",
+#         f"{li}-{fn}@{domain}",
+#         f"{li}-{fi}@{domain}",
+#         f"{fn}_{ln}@{domain}",
+#         f"{fi}_{ln}@{domain}",
+#         f"{fn}_{li}@{domain}",
+#         f"{fi}_{li}@{domain}",
+#         f"{ln}_{fn}@{domain}",
+#         f"{ln}_{fi}@{domain}",
+#         f"{li}_{fn}@{domain}",
+#         f"{li}_{fi}@{domain}",
+#     ]
+
+#     return list(set(patterns))  # ensure unique
+
+
+# def find_email_manual(person_data: dict):
+#     """
+#     Find a valid email for a given person using MailTester API.
+
+#     person_data must contain:
+#       - first_name
+#       - last_name
+#       - domain
+#     """
+#     api_key = NINJA_API_KEY
+#     token = get_token_for_ninja(api_key)
+
+#     candidates = generate_emails_alternative(
+#         person_data["first_name"], person_data["last_name"], person_data["domain"]
+#     )
+
+#     for email in candidates:
+#         result = verify_email_after_manual(email, token)
+#         if result.get("code") == "ok":
+#             return {
+#                 "found_email": email,
+#                 "details": result
+#             }
+
+#     return {
+#         "found_email": "email not found",
+#         "details": None
+#     }

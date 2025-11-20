@@ -731,6 +731,66 @@ def process_entry_logic(entry_id: str):
                             subindustry = None
                             industries = None
 
+                        if isinstance(data, str):
+                            data = json.loads(data) 
+
+                        lpc = data["lpc"]
+                        goal = data["goal"]
+                        input_size = data["size"]
+                        input_industry = data["industry"]
+                        input_revenue = data["revenue"]
+
+                        if not subindustry:
+                            subindustry = "-"
+                            industries = "-"
+
+                        if not employee_count or employee_count == 0 or employee_count == "0":
+                            employee_range = "-"
+
+                        # First check size and industry WITHOUT revenue (to avoid unnecessary revenue API calls)
+                        input_data_size_industry = {
+                            "input_industry": input_industry,
+                            "input_size": input_size,
+                            "input_revenue": "any",  # Skip revenue check for now
+                        }
+
+                        scraped_company_data_size_industry = {
+                            "industry": industries,
+                            "employees": employee_range,
+                            "revenue": "-",  # Not checked yet
+                        }
+
+                        compared_data_info = compare_data(input_data_size_industry, scraped_company_data_size_industry)
+
+                        # If size or industry don't match, skip revenue check and mark as unsuitable
+                        if not compared_data_info["is_valid"]:
+                            unsuitable_data = {
+                                "Company Name": company_name,
+                                "domain": clean_domain,
+                                "employees": employee_range,
+                                "employees_prooflink": employees_prooflink,
+                                "subindustry": subindustry,
+                                "industry": industries,
+                                "revenue": "-",  # Not fetched since size/industry didn't match
+                                "revenue_prooflink": "-",
+                                "first_name": "-",
+                                "last_name": "-",
+                                "title": "-",
+                                "prooflink": "-",
+                                "location": "-",
+                                "status": compared_data_info["status"],
+                                "email": "-",
+                                "email_status": "-",
+                                "last_activity": "-"
+                            }
+
+                            unsuitable_results.append(unsuitable_data)
+                            write_results_in_tab(sheet, suitable_results, unsuitable_results, "unsuitable", unsuitable_data)
+                            
+                            continue  # Skip revenue check and lead search
+
+                        # Size and industry match - now check revenue
+                        print(f"✅ Size and industry match, checking revenue...")
                         revenue_data = get_revenue(clean_domain)
 
                         if revenue_data:
@@ -742,31 +802,38 @@ def process_entry_logic(entry_id: str):
 
                         print(f"✅ Done Step 2 (Get company revenue: '/search')")
 
-                        if isinstance(data, str):
-                            data = json.loads(data) 
+                        # Skip company if no revenue found - don't search for leads
+                        if not revenue or revenue == "-" or revenue == None:
+                            print(f"⏭️ Skipping company '{company_name}' - no revenue found")
+                            unsuitable_data = {
+                                "Company Name": company_name,
+                                "domain": clean_domain,
+                                "employees": employee_range,
+                                "employees_prooflink": employees_prooflink,
+                                "subindustry": subindustry if subindustry else "-",
+                                "industry": industries if industries else "-",
+                                "revenue": "-",
+                                "revenue_prooflink": "-",
+                                "first_name": "-",
+                                "last_name": "-",
+                                "title": "-",
+                                "prooflink": "-",
+                                "location": "-",
+                                "status": "no revenue",
+                                "email": "-",
+                                "email_status": "-",
+                                "last_activity": "-"
+                            }
+                            unsuitable_results.append(unsuitable_data)
+                            write_results_in_tab(sheet, suitable_results, unsuitable_results, "unsuitable", unsuitable_data)
+                            continue
 
-                        lpc = data["lpc"]
-                        goal = data["goal"]
-                        input_size = data["size"]
-                        input_industry = data["industry"]
-                        input_revenue = data["revenue"]
-
+                        # Now do full comparison with revenue
                         input_data = {
                             "input_industry": input_industry,
                             "input_size": input_size,
                             "input_revenue": input_revenue,
                         }
-
-                        if not revenue:
-                            revenue = "-"
-                            revenue_prooflink = "-"
-
-                        if not subindustry:
-                            subindustry = "-"
-                            industries = "-"
-
-                        if not employee_count or employee_count == 0 or employee_count == "0":
-                            employee_range = "-"
 
                         scraped_company_data = {
                             "industry": industries,
@@ -800,7 +867,7 @@ def process_entry_logic(entry_id: str):
                             unsuitable_results.append(unsuitable_data)
                             write_results_in_tab(sheet, suitable_results, unsuitable_results, "unsuitable", unsuitable_data)
                             
-                            # continue
+                            continue
 
                         else:
 
@@ -1488,14 +1555,15 @@ def process_entry_logic(entry_id: str):
                                     "last_activity": person["last_activity"],
                                 }
 
+                                # Only add to suitable results if email is valid or accept_all
                                 if email_status == "valid" or email_status == "accept_all":
                                     suitable_results.append(scraped_data)
                                     temp_lead_valid_count += 1
                                     write_results_in_tab(sheet, suitable_results, unsuitable_results, "suitable", scraped_data)
                                 else:
-                                    scraped_data["last_activity"] = "-"
-                                    unsuitable_results.append(scraped_data)
-                                    write_results_in_tab(sheet, suitable_results, unsuitable_results, "unsuitable", scraped_data)
+                                    # Don't write to unsuitable - only valid emails go to results
+                                    # Just skip this lead and continue
+                                    pass
 
                                 # Check LPC limit
                                 if temp_lead_valid_count == int(lpc):
