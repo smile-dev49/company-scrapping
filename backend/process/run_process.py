@@ -1371,6 +1371,7 @@ def process_entry_logic(entry_id: str):
                                 
                                 # Check lead activity 
                                 last_activity = "-"
+                                activity_available = False
                                 if linkedin_url and linkedin_url != "-": 
                                     profile_activity = get_profile_activity(linkedin_url) 
 
@@ -1382,34 +1383,68 @@ def process_entry_logic(entry_id: str):
 
                                         raise Exception("Subscription is suspended. Contact admin for renewal")
 
-                                    last_activity = profile_activity.get("recent_activity_time", "-") 
+                                    # Check if we successfully retrieved activity data
+                                    if profile_activity and isinstance(profile_activity, dict) and profile_activity.get("recent_activity_time"):
+                                        last_activity = profile_activity.get("recent_activity_time", "-")
+                                        activity_available = True
+                                    else:
+                                        # Could not get activity data - add to unsuitable
+                                        last_activity = "-"
+                                        activity_available = False
                                 
-                                if last_activity:
-                                    if "yr" in last_activity.lower(): 
-                                        unsuitable_data = { 
-                                            "company_id": comp_data.get('company_id', '-'),
-                                            "Company Name": comp_data['company_name'], 
-                                            "domain": comp_data['domain'], 
-                                            "employees": comp_data['employee_range'], 
-                                            "employees_prooflink": comp_data['employees_prooflink'], 
-                                            "subindustry": comp_data['subindustry'], 
-                                            "industry": comp_data['industry'], 
-                                            "revenue": comp_data['revenue'], 
-                                            "revenue_prooflink": comp_data['revenue_prooflink'], 
-                                            "first_name": first_name, 
-                                            "last_name": last_name, 
-                                            "title": title, 
-                                            "prooflink": linkedin_url, 
-                                            "location": location, 
-                                            "status": "activity", 
-                                            "email": "-", 
-                                            "email_status": "-", 
-                                            "last_activity": last_activity, 
-                                        } 
-                                        unsuitable_results.append(unsuitable_data) 
-                                        write_results_in_tab(sheet, suitable_results, unsuitable_results, "unsuitable", unsuitable_data) 
-                                        
-                                        continue 
+                                # If we couldn't get activity data, add to unsuitable
+                                if not activity_available:
+                                    unsuitable_data = { 
+                                        "company_id": comp_data.get('company_id', '-'),
+                                        "Company Name": comp_data['company_name'], 
+                                        "domain": comp_data['domain'], 
+                                        "employees": comp_data['employee_range'], 
+                                        "employees_prooflink": comp_data['employees_prooflink'], 
+                                        "subindustry": comp_data['subindustry'], 
+                                        "industry": comp_data['industry'], 
+                                        "revenue": comp_data['revenue'], 
+                                        "revenue_prooflink": comp_data['revenue_prooflink'], 
+                                        "first_name": first_name, 
+                                        "last_name": last_name, 
+                                        "title": title, 
+                                        "prooflink": linkedin_url, 
+                                        "location": location, 
+                                        "status": "no activity data", 
+                                        "email": "-", 
+                                        "email_status": "-", 
+                                        "last_activity": last_activity, 
+                                    } 
+                                    unsuitable_results.append(unsuitable_data) 
+                                    write_results_in_tab(sheet, suitable_results, unsuitable_results, "unsuitable", unsuitable_data) 
+                                    
+                                    continue
+                                
+                                # If activity is old (contains "yr"), add to unsuitable
+                                if last_activity and "yr" in last_activity.lower(): 
+                                    unsuitable_data = { 
+                                        "company_id": comp_data.get('company_id', '-'),
+                                        "Company Name": comp_data['company_name'], 
+                                        "domain": comp_data['domain'], 
+                                        "employees": comp_data['employee_range'], 
+                                        "employees_prooflink": comp_data['employees_prooflink'], 
+                                        "subindustry": comp_data['subindustry'], 
+                                        "industry": comp_data['industry'], 
+                                        "revenue": comp_data['revenue'], 
+                                        "revenue_prooflink": comp_data['revenue_prooflink'], 
+                                        "first_name": first_name, 
+                                        "last_name": last_name, 
+                                        "title": title, 
+                                        "prooflink": linkedin_url, 
+                                        "location": location, 
+                                        "status": "activity", 
+                                        "email": "-", 
+                                        "email_status": "-", 
+                                        "last_activity": last_activity, 
+                                    } 
+                                    unsuitable_results.append(unsuitable_data) 
+                                    write_results_in_tab(sheet, suitable_results, unsuitable_results, "unsuitable", unsuitable_data) 
+                                    
+                                    continue 
 
                                 person_data = {
                                     "first_name": first_name,
