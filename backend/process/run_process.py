@@ -15,14 +15,10 @@ from cache_manager import store_processed_data, delete_processed_data
 from models import SessionLocal, ProcessEntry, ProcessItem
 from fastapi.responses import JSONResponse
 
-
-# Load .env variables
 load_dotenv()
 
-# ENV VARS
 API_KEY = os.getenv("RAPIDAPI_KEY")
 API_KEY_VERIFY = os.getenv("RAPIDAPI_KEY_VERIFY")
-
 
 def process_entry_logic(entry_id: str):
     """
@@ -30,19 +26,14 @@ def process_entry_logic(entry_id: str):
     Can be used by both /process (new) and /resume (stopped).
     """
     db = SessionLocal()
-
     try:
         # Get main entry
         entry = db.query(ProcessEntry).get(entry_id)
         if not entry:
             print(f"Entry {entry_id} not found")
             return
-
-        # Optional: mark entry as in progress
         entry.status = "In Progress"
         db.commit()
-
-        # Load user input from entry.input_data
         raw_data = entry.input_data or {}
         if isinstance(raw_data, str):
             data = json.loads(raw_data)
@@ -61,7 +52,6 @@ def process_entry_logic(entry_id: str):
         unsuitable_results = []
 
         sup_names_sheet_url = data["sup_names_sheet_url"]
-
         if sup_names_sheet_url:
             sup_names = read_sup_names(sup_names_sheet_url)
 
@@ -75,10 +65,8 @@ def process_entry_logic(entry_id: str):
         else:
             sup_names = None
 
-        # Insert ProcessItem rows first time if none exist (--Project runs first time)
         if not entry.items:
 
-            # Mixed
             if process_type == "search_mixed": 
             
                 try:
@@ -104,7 +92,6 @@ def process_entry_logic(entry_id: str):
                 else:
                     process_type = "search_by_name"
             
-            # Search by company domain
             if process_type == "search_by_domain": 
             
                 try:
@@ -117,26 +104,19 @@ def process_entry_logic(entry_id: str):
                 
                 if not read_sheet_response["message"]: 
                     values = read_sheet_response["domains"]
-                    # Remove duplicates before inserting
                     unique_values, duplicate_values = remove_duplicates(values)
                     
-                    # Filter out empty values
                     unique_values = [val for val in unique_values if val and val.strip()]
                     
-                    # Get current sheet domains as a set for comparison
                     sheet_domains_set = set(unique_values)
                     
-                    # Check which domains already exist in database for this entry
                     existing_items = db.query(ProcessItem).filter_by(entry_id=entry_id).all()
                     existing_values = {item.value for item in existing_items}
                     
-                    # Remove unprocessed domains that are NOT in the current sheet
-                    # This ensures we only process domains from the current sheet
                     for item in existing_items:
                         if item.value not in sheet_domains_set and item.status == "unprocessed":
                             db.delete(item)
                     
-                    # Only insert domains that don't already exist
                     new_values = [val for val in unique_values if val not in existing_values]
                     
                     print(f"✅ Found {len(values)} domains in sheet, {len(unique_values)} unique, {len(duplicate_values)} duplicates")
@@ -155,7 +135,6 @@ def process_entry_logic(entry_id: str):
 
                     raise Exception(read_sheet_response["message"])
             
-            # Search by company name
             if process_type == "search_by_name": 
             
                 try:
@@ -219,7 +198,6 @@ def process_entry_logic(entry_id: str):
 
                     for indx in range(len(unique_values)):
 
-                        # Check if company name in sup list
                         if sup_names:
                             lower_list = [item.lower() for item in sup_names]
                             lower_name = unique_values[indx].lower()
@@ -252,12 +230,10 @@ def process_entry_logic(entry_id: str):
 
                                 continue    
 
-                        # Compare scraped industry, size to user input data
                         input_size = data["size"]
                         input_industry = data["industry"]
                         input_revenue = data["revenue"]
 
-                        # Recheck industries "any" case
                         if len(input_industry) == len(all_industries):
                             input_industry = ["any"]
 
@@ -266,9 +242,6 @@ def process_entry_logic(entry_id: str):
                             "input_size": input_size,
                             "input_revenue": "any",
                         }
-
-                        # industry = company_short_data[indx]["industry"]
-                        # subindustry = company_short_data[indx]["subindustry"]
 
                         if not company_short_data[indx]["industry"]:
                             subindustry = "-"
@@ -447,7 +420,6 @@ def process_entry_logic(entry_id: str):
 
                 raise Exception(read_sheet_response_by_name["message"])
             else:
-                # values = read_sheet_response_by_name["name"]  # not used
                 country_names = read_sheet_response_by_name["country_names"]
                 sheet = read_sheet_response_by_name["sheet"]
 
@@ -505,12 +477,7 @@ def process_entry_logic(entry_id: str):
         if is_company_geo_required and country_names:
             domains_and_countries = dict(zip(values_to_process, country_names))
 
-        # suitable_results = []
-        # unsuitable_results = []
-
-        # Define exclude keywords *******************
         exclude_keywords = []
-
         if data.get("exclude_keywords", ""):
             modifed_exclude_keywords = data.get("exclude_keywords", "").replace("exclude_keywords", "").replace("/", ",").replace(":", "")
             cleaned_modifed_exclude_keywords = [x.strip() for x in modifed_exclude_keywords.split(",") if x.strip()]
@@ -568,9 +535,7 @@ def process_entry_logic(entry_id: str):
                 print(f"⏹️ Stopped at row {idx}")
                 entry.last_processed_row = idx
                 db.commit()
-
                 break
-
             print(f"\n⏳ Processing company {idx} \n")
             print(f"Domain:: {domain}")
             
@@ -600,13 +565,10 @@ def process_entry_logic(entry_id: str):
                 unsuitable_results.append(unsuitable_data)
                 write_results_in_tab(sheet, suitable_results, unsuitable_results, "unsuitable", unsuitable_data) 
 
-                # continue   
-
             else:      
 
                 clean_domain = get_clean_domain(domain)
 
-                # Check if domain in sup list
                 if sup_domains and clean_domain in sup_domains:
                         print(f"The domain ('{clean_domain}') in sup list.")
                         
@@ -633,8 +595,6 @@ def process_entry_logic(entry_id: str):
 
                         unsuitable_results.append(unsuitable_data)
                         write_results_in_tab(sheet, suitable_results, unsuitable_results, "unsuitable", unsuitable_data) 
-
-                        # continue                   
 
                 else:
                     print(f"Getting company data for domain: {clean_domain}")
@@ -666,7 +626,6 @@ def process_entry_logic(entry_id: str):
                     if not company_data:
 
                         print(f"The API was not able to find the domain on Linkedin ('{clean_domain}').You will not be charged for this request.")
-                        
                         unsuitable_data = {
                             "company_id": "-",
                             "Company Name": "-",
@@ -690,9 +649,6 @@ def process_entry_logic(entry_id: str):
 
                         unsuitable_results.append(unsuitable_data)
                         write_results_in_tab(sheet, suitable_results, unsuitable_results, "unsuitable", unsuitable_data) 
-
-                        # continue       
-
                     else:            
                                     
                         company_name = company_data.get('company_name', 'no info')
@@ -700,8 +656,6 @@ def process_entry_logic(entry_id: str):
                         employee_count = company_data.get('employee_count', 'no info')
                         employees_prooflink = company_data.get('linkedin_url', 'no info')
                         company_id = company_data.get('company_id', 'no info')
-
-                        # Check if company name in sup list
                         if sup_names:
                             lower_list = [item.lower() for item in sup_names]
                             lower_name = company_name.lower()
@@ -757,22 +711,20 @@ def process_entry_logic(entry_id: str):
                         if not employee_count or employee_count == 0 or employee_count == "0":
                             employee_range = "-"
 
-                        # First check size and industry WITHOUT revenue (to avoid unnecessary revenue API calls)
                         input_data_size_industry = {
                             "input_industry": input_industry,
                             "input_size": input_size,
-                            "input_revenue": "any",  # Skip revenue check for now
+                            "input_revenue": "any",
                         }
 
                         scraped_company_data_size_industry = {
                             "industry": industries,
                             "employees": employee_range,
-                            "revenue": "-",  # Not checked yet
+                            "revenue": "-", 
                         }
 
                         compared_data_info = compare_data(input_data_size_industry, scraped_company_data_size_industry)
 
-                        # If size or industry don't match, skip revenue check and mark as unsuitable
                         if not compared_data_info["is_valid"]:
                             unsuitable_data = {
                                 "company_id": company_id if company_id != 'no info' else '-',
@@ -798,9 +750,8 @@ def process_entry_logic(entry_id: str):
                             unsuitable_results.append(unsuitable_data)
                             write_results_in_tab(sheet, suitable_results, unsuitable_results, "unsuitable", unsuitable_data)
                             
-                            continue  # Skip revenue check and lead search
+                            continue 
 
-                        # Size and industry match - now check revenue
                         print(f"✅ Size and industry match, checking revenue...")
                         revenue_data = get_revenue(clean_domain)
 
@@ -813,7 +764,6 @@ def process_entry_logic(entry_id: str):
 
                         print(f"✅ Done Step 2 (Get company revenue: '/search')")
 
-                        # Skip company if no revenue found - don't search for leads
                         if not revenue or revenue == "-" or revenue == None:
                             print(f"⏭️ Skipping company '{company_name}' - no revenue found")
                             unsuitable_data = {
@@ -840,7 +790,6 @@ def process_entry_logic(entry_id: str):
                             write_results_in_tab(sheet, suitable_results, unsuitable_results, "unsuitable", unsuitable_data)
                             continue
 
-                        # Now do full comparison with revenue
                         input_data = {
                             "input_industry": input_industry,
                             "input_size": input_size,
@@ -883,8 +832,6 @@ def process_entry_logic(entry_id: str):
                             continue
 
                         else:
-
-                            # Define geo codes
                             selected_countries = data.get("geo")
                             if "select_all_countries" in selected_countries:
                                 geolocations = list(country_ids.keys())
@@ -895,62 +842,23 @@ def process_entry_logic(entry_id: str):
 
                             first_requirements = data.get("requirements")[0]
 
-                            # Define keywords ***********************
                             modifed_keywords = first_requirements.get("keywords", "").replace("keywords", "").replace("/", ",").replace(":", "")
                             cleaned_keywords = [x.strip() for x in modifed_keywords.split(",") if x.strip()]
                             keywords = []
                             for i in cleaned_keywords:
                                 keywords.append(i)
 
-                            # Define functions **********************
                             job_functions = first_requirements.get("job_function")
                             if job_functions == ['any']:
                                 job_functions = []
 
                             job_functions = ["Operations" if item == "Business operations" else item for item in job_functions]
 
-                            # Define levels **************************
                             level1 = first_requirements.get("level1", [])
                             level2 = first_requirements.get("level2", [])
                             level3 = first_requirements.get("level3", [])
                             levels = get_job_levels(level1, level2, level3)
-
-                            # Compare keywords and titles 
-                            # if keywords:
-                            #     compared_keywords = any(item.lower() in (x.lower() for x in keywords) for item in levels)
-                            #     is_exist_keywords = compared_keywords
-                            # else:
-                            #     is_exist_keywords = True
-
-                            # if not is_exist_keywords:
-                            #     unsuitable_data = {
-                            #         "Company Name": company_name,
-                            #         "domain": clean_domain,
-                            #         "employees": employee_range,
-                            #         "employees_prooflink": employees_prooflink,
-                            #         "subindustry": subindustry,
-                            #         "industry": industries,
-                            #         "revenue": revenue,
-                            #         "revenue_prooflink": revenue_prooflink,
-                            #         "first_name": "-",
-                            #         "last_name": "-",
-                            #         "title": "-",
-                            #         "prooflink": "-",
-                            #         "location": "-",
-                            #         "status": "h title",
-                            #         "email": "-",
-                            #         "email_status": "-",
-                            #         "last_activity": "-"
-                            #     }
-
-                            #     unsuitable_results.append(unsuitable_data)
-                            #     write_results_in_tab(sheet, suitable_results, unsuitable_results, "unsuitable", unsuitable_data)
-
-                            # else:
-
                             print(f"✅ Done Step 3 (Compare company data with user input)")
-
-                            # Store company data for chunk processing
                             chunk.append(company_id)
                             company_data_map[company_id] = {
                                 'company_id': company_id,
@@ -973,10 +881,6 @@ def process_entry_logic(entry_id: str):
                                 "geo_locations": geolocations,
                                 "entry_name": entry.name 
                             })
-
-                            # print(f"✅ Data stored in cache for entry: {entry_id}") # ********* for display in UI
-
-            # Process chunk when full or at the end
             if chunk:
                 if len(chunk) == 10 or idx == len(values_to_process):
                     
@@ -999,7 +903,6 @@ def process_entry_logic(entry_id: str):
 
                     if not request_id:
                         print("❌ No request_id returned.")
-                        # Mark all companies in chunk as failed
                         for comp_id in chunk:
                             comp_data = company_data_map[comp_id]
                             unsuitable_data = {
@@ -1034,7 +937,6 @@ def process_entry_logic(entry_id: str):
 
                     if check_search_data["status"] != "done":
                         print("❌ Timed out waiting for result.")
-                        # Mark all companies in chunk as failed
                         for comp_id in chunk:
                             comp_data = company_data_map[comp_id]
                             unsuitable_data = {
@@ -1075,25 +977,14 @@ def process_entry_logic(entry_id: str):
                         last_count = 0
                     
                     if lead_count == 0:
-                        
-                        # ///////////////////////////////////////////////////////////////////////////////////////////////////
-                        # //////////////////////// Try search again if there are other requirements /////////////////////////
-                        # ///////////////////////////////////////////////////////////////////////////////////////////////////
-                        
                         if requirements_count > 1:
-
                             left_requirements = data.get("requirements")[1:]
-
                             for req_idx in range(len(left_requirements)):
-
-                                # Define keywords ***********************
                                 modifed_keywords = left_requirements[req_idx].get("keywords", "").replace("keywords", "").replace("/", ",").replace(":", "")                                
                                 cleaned_keywords = [x.strip() for x in modifed_keywords.split(",") if x.strip()]
                                 keywords = []
                                 for i in cleaned_keywords:
                                     keywords.append(i)
-
-                                # Define functions **********************
                                 job_functions = left_requirements[req_idx].get("job_function")
                                 if job_functions == ['any']:
                                     job_functions = []
