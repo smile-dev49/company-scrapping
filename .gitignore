@@ -5,3 +5,7 @@ __pycache__/
 *.db
 google_service/service_account.json
 service_account.json
+poetic-tube-478904-a7-d597c85c0764.json
+backend/google_service/poetic-tube-478904-a7-d597c85c0764.json
+**/poetic-tube-478904-a7-d597c85c0764.json
+**/*service_account*.json
