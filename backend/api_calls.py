@@ -374,7 +374,7 @@ def verify_email(rapidapi_key, email):
 
     querystring = {"email": email}
     headers = { 
-        "x-rapidapi-key": '6158d72143msh45c25e07c9bcb8bp1b4178jsned84e61423ce',
+        "x-rapidapi-key": EMAIL_FINDER_KEY,
         "x-rapidapi-host": "validect-email-verification-v1.p.rapidapi.com"
     }
 

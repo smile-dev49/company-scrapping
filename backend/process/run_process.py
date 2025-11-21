@@ -194,6 +194,7 @@ def process_entry_logic(entry_id: str):
                     if duplicate_values:
                         for dup_val in duplicate_values:
                             unsuitable_data = {
+                                "company_id": "-",
                                 "Company Name": dup_val,
                                 "domain": "-",
                                 "employees": "-",
@@ -226,6 +227,7 @@ def process_entry_logic(entry_id: str):
                                 print(f"The company ('{unique_values[indx]}') in sup list.")
                                 
                                 unsuitable_data = {
+                                    "company_id": "-",
                                     "Company Name": unique_values[indx],
                                     "domain": "-",
                                     "employees": "-",
@@ -287,6 +289,7 @@ def process_entry_logic(entry_id: str):
 
                         if not compared_data_info["is_valid"]:
                             unsuitable_data = {
+                                "company_id": "-",
                                 "Company Name": unique_values[indx],
                                 "domain": "-",
                                 "employees": employees_size,
@@ -332,6 +335,7 @@ def process_entry_logic(entry_id: str):
 
                         if not compared_data_info["is_valid"]:
                             unsuitable_data = {
+                                "company_id": "-",
                                 "Company Name": unique_values[indx],
                                 "domain": "-",
                                 "employees": employees_size,
@@ -369,6 +373,7 @@ def process_entry_logic(entry_id: str):
                                 print(f"The API was not able to find the domain on Linkedin ('{company_short_data[indx]["company"]}').You will not be charged for this request.")
                                 
                                 unsuitable_data = {
+                                    "company_id": "-",
                                     "Company Name": unique_values[indx],
                                     "domain": "-",
                                     "employees": "-",
@@ -465,6 +470,7 @@ def process_entry_logic(entry_id: str):
         if duplicate_values:
             for dup_val in duplicate_values:
                 unsuitable_data = {
+                    "company_id": "-",
                     "Company Name": dup_val,
                     "domain": "-",
                     "employees": "-",
@@ -571,6 +577,7 @@ def process_entry_logic(entry_id: str):
             if not domain or "." not in domain or domain.startswith("linkedin.com"):
                                 
                 unsuitable_data = {
+                    "company_id": "-",
                     "Company Name": "-",
                     "domain": domain,
                     "employees": "-",
@@ -604,6 +611,7 @@ def process_entry_logic(entry_id: str):
                         print(f"The domain ('{clean_domain}') in sup list.")
                         
                         unsuitable_data = {
+                            "company_id": "-",
                             "Company Name": "-",
                             "domain": clean_domain,
                             "employees": "-",
@@ -660,6 +668,7 @@ def process_entry_logic(entry_id: str):
                         print(f"The API was not able to find the domain on Linkedin ('{clean_domain}').You will not be charged for this request.")
                         
                         unsuitable_data = {
+                            "company_id": "-",
                             "Company Name": "-",
                             "domain": clean_domain,
                             "employees": "-",
@@ -700,6 +709,7 @@ def process_entry_logic(entry_id: str):
                                 print(f"The company ('{company_name}') in sup list.")
                                 
                                 unsuitable_data = {
+                                    "company_id": company_id if company_id != 'no info' else '-',
                                     "Company Name": company_name,
                                     "domain": clean_domain,
                                     "employees": employee_range,
@@ -765,6 +775,7 @@ def process_entry_logic(entry_id: str):
                         # If size or industry don't match, skip revenue check and mark as unsuitable
                         if not compared_data_info["is_valid"]:
                             unsuitable_data = {
+                                "company_id": company_id if company_id != 'no info' else '-',
                                 "Company Name": company_name,
                                 "domain": clean_domain,
                                 "employees": employee_range,
@@ -806,6 +817,7 @@ def process_entry_logic(entry_id: str):
                         if not revenue or revenue == "-" or revenue == None:
                             print(f"⏭️ Skipping company '{company_name}' - no revenue found")
                             unsuitable_data = {
+                                "company_id": company_id if company_id != 'no info' else '-',
                                 "Company Name": company_name,
                                 "domain": clean_domain,
                                 "employees": employee_range,
@@ -845,6 +857,7 @@ def process_entry_logic(entry_id: str):
 
                         if not compared_data_info["is_valid"]:
                             unsuitable_data = {
+                                "company_id": company_id if company_id != 'no info' else '-',
                                 "Company Name": company_name,
                                 "domain": clean_domain,
                                 "employees": employee_range,
@@ -940,6 +953,7 @@ def process_entry_logic(entry_id: str):
                             # Store company data for chunk processing
                             chunk.append(company_id)
                             company_data_map[company_id] = {
+                                'company_id': company_id,
                                 'company_name': company_name,
                                 'domain': clean_domain,
                                 'employee_range': employee_range,
@@ -989,6 +1003,7 @@ def process_entry_logic(entry_id: str):
                         for comp_id in chunk:
                             comp_data = company_data_map[comp_id]
                             unsuitable_data = {
+                                "company_id": comp_data.get('company_id', '-'),
                                 "Company Name": comp_data['company_name'],
                                 "domain": comp_data['domain'],
                                 "employees": comp_data['employee_range'],
@@ -1023,6 +1038,7 @@ def process_entry_logic(entry_id: str):
                         for comp_id in chunk:
                             comp_data = company_data_map[comp_id]
                             unsuitable_data = {
+                                "company_id": comp_data.get('company_id', '-'),
                                 "Company Name": comp_data['company_name'],
                                 "domain": comp_data['domain'],
                                 "employees": comp_data['employee_range'],
@@ -1122,6 +1138,7 @@ def process_entry_logic(entry_id: str):
                                     for comp_id in chunk:
                                         comp_data = company_data_map[comp_id]
                                         unsuitable_data = {
+                                            "company_id": comp_data.get('company_id', '-'),
                                             "Company Name": comp_data['company_name'],
                                             "domain": comp_data['domain'],
                                             "employees": comp_data['employee_range'],
@@ -1156,6 +1173,7 @@ def process_entry_logic(entry_id: str):
                                     for comp_id in chunk:
                                         comp_data = company_data_map[comp_id]
                                         unsuitable_data = {
+                                            "company_id": comp_data.get('company_id', '-'),
                                             "Company Name": comp_data['company_name'],
                                             "domain": comp_data['domain'],
                                             "employees": comp_data['employee_range'],
@@ -1194,6 +1212,7 @@ def process_entry_logic(entry_id: str):
                             for comp_id in chunk:
                                 comp_data = company_data_map[comp_id]
                                 unsuitable_data = {
+                                    "company_id": comp_data.get('company_id', '-'),
                                     "Company Name": comp_data['company_name'],
                                     "domain": comp_data['domain'],
                                     "employees": comp_data['employee_range'],
@@ -1232,6 +1251,7 @@ def process_entry_logic(entry_id: str):
                             if not company_leads:
                                 # No leads for this specific company
                                 unsuitable_data = {
+                                    "company_id": comp_data.get('company_id', '-'),
                                     "Company Name": comp_data['company_name'],
                                     "domain": comp_data['domain'],
                                     "employees": comp_data['employee_range'],
@@ -1297,6 +1317,7 @@ def process_entry_logic(entry_id: str):
 
                                 if False in title_states:
                                     unsuitable_data = {
+                                        "company_id": comp_data.get('company_id', '-'),
                                         "Company Name": comp_data['company_name'],
                                         "domain": comp_data['domain'],
                                         "employees": comp_data['employee_range'],
@@ -1325,6 +1346,7 @@ def process_entry_logic(entry_id: str):
                                 if is_company_geo_required:
                                     if domains_and_countries[comp_data['domain']].lower() not in location.lower():
                                         unsuitable_data = {
+                                            "company_id": comp_data.get('company_id', '-'),
                                             "Company Name": comp_data['company_name'],
                                             "domain": comp_data['domain'],
                                             "employees": comp_data['employee_range'],
@@ -1365,6 +1387,7 @@ def process_entry_logic(entry_id: str):
                                 if last_activity:
                                     if "yr" in last_activity.lower(): 
                                         unsuitable_data = { 
+                                            "company_id": comp_data.get('company_id', '-'),
                                             "Company Name": comp_data['company_name'], 
                                             "domain": comp_data['domain'], 
                                             "employees": comp_data['employee_range'], 
@@ -1417,6 +1440,7 @@ def process_entry_logic(entry_id: str):
  
                                 if "?" in person["first_name"] or "?" in person["last_name"]:
                                     unsuitable_data = { 
+                                        "company_id": comp_data.get('company_id', '-'),
                                         "Company Name": comp_data['company_name'], 
                                         "domain": comp_data['domain'], 
                                         "employees": comp_data['employee_range'], 
@@ -1536,6 +1560,7 @@ def process_entry_logic(entry_id: str):
                                     email_status = "email not found"
                                 
                                 scraped_data = {
+                                    "company_id": comp_data.get('company_id', '-'),
                                     "Company Name": comp_data['company_name'],
                                     "domain": comp_data['domain'],
                                     "employees": comp_data['employee_range'],

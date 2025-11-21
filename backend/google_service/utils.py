@@ -5,7 +5,7 @@ from fastapi import HTTPException
 
 
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("google_service/service_account.json", scope)
+creds = ServiceAccountCredentials.from_json_keyfile_name("google_service/poetic-tube-478904-a7-d597c85c0764.json", scope)
 gc = gspread.authorize(creds)
 
 
@@ -18,11 +18,10 @@ def get_sheet_name(sheet_url):
         spreadsheet_id = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_url).group(1)
         gid_match = re.search(r"gid=([0-9]+)", sheet_url)
         gid = int(gid_match.group(1)) if gid_match else None
-
+        print("=======================================>", spreadsheet_id, gid)
         sheet = gc.open_by_key(spreadsheet_id)
         sheet_name = sheet.title
-
-        return sheet_name
+        return 'sheet_name'
 
     except Exception as e:
         print(f"❌ Error reading sheet name: {e}")
